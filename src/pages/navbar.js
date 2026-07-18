@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,7 +9,7 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
       <div className="container">
-      <a className="navbar-brand d-flex align-items-center" href="#">
+      <a className="navbar-brand d-flex align-items-center" href="#!">
       <img
         src="assets/assets/img/another-broucher-logo-removebg-preview.png"
         alt="Logo"
@@ -36,12 +36,12 @@ export default function Navbar() {
               </a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#">Link</a>
+              <a className="nav-link" href="#!">Link</a>
             </li>
             <li className="nav-item dropdown">
               <a
                 className="nav-link dropdown-toggle"
-                href="#"
+                href="#!"
                 id="navbarDropdown"
                 role="button"
                 data-bs-toggle="dropdown"
@@ -51,21 +51,21 @@ export default function Navbar() {
               </a>
               <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
                 <li>
-                  <a className="dropdown-item" href="#">Action</a>
+                  <a className="dropdown-item" href="#!">Action</a>
                 </li>
                 <li>
-                  <a className="dropdown-item" href="#">Another action</a>
+                  <a className="dropdown-item" href="#!">Another action</a>
                 </li>
                 <li>
                   <hr className="dropdown-divider" />
                 </li>
                 <li>
-                  <a className="dropdown-item" href="#">Something else here</a>
+                  <a className="dropdown-item" href="#!">Something else here</a>
                 </li>
               </ul>
             </li>
             <li className="nav-item">
-              <a className="nav-link disabled" href="#">Disabled</a>
+              <a className="nav-link disabled" href="#!">Disabled</a>
             </li>
           </ul>
           <form className="d-flex">
