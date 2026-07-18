@@ -8,7 +8,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Adminportal />} />
+        <Route path="/" element={<Adminportal />} /> 
         <Route path="/navbar" element={<Navbar />} />
         <Route path="/slot" element={<Slot />} />
         {/* <Route path="/resumeform" element={<Resumeform />} /> */}
