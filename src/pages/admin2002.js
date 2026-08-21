@@ -824,8 +824,21 @@ function AdminPortal() {
         <div className="exact-consent-backdrop">
           <div className="exact-consent-modal">
             {consentLoading && (
-              <div className="loading-blur-overlay">
-                <div className="spinner-border text-primary" role="status" />
+              <div className="consent-processing-overlay">
+                <div className="consent-processing-loader">
+                  <video
+                    src="/document-processing-animation-gif-download-15109350.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="consent-processing-video"
+                  />
+
+                  <div className="consent-processing-text">
+                    Saving Consent...
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1434,6 +1447,37 @@ function AdminPortal() {
   gap: 10px;
 }
 
+
+.consent-processing-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+
+.consent-processing-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.consent-processing-video {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+}
+
+.consent-processing-text {
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
 
 /* =========================
    ACTIONS
