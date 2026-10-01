@@ -409,28 +409,40 @@ function AdminPortal() {
   useEffect(() => {
     const setupNotifications = async () => {
       try {
+        console.log("1. Notification setup started");
+
         if (!("Notification" in window)) {
-          console.log("Notifications are not supported.");
+          console.log("2. Notifications NOT supported");
           return;
         }
 
         const permission = await Notification.requestPermission();
+        console.log("3. Permission:", permission);
 
         if (permission !== "granted") {
-          console.log("Notification permission denied.");
+          console.log("STOP: Permission not granted");
           return;
         }
 
         const messaging = await getFirebaseMessaging();
 
         if (!messaging) {
-          console.log("Firebase Messaging is not supported.");
+          console.log("STOP: Firebase Messaging not supported");
           return;
         }
+
+        console.log("4. Firebase Messaging OK");
 
         const registration = await navigator.serviceWorker.register(
           "/firebase-messaging-sw.js",
         );
+
+        console.log("5. Service Worker OK:", registration.scope);
+
+        // Wait until the service worker is ready
+        await navigator.serviceWorker.ready;
+
+        console.log("6. Generating FCM token...");
 
         const token = await getToken(messaging, {
           vapidKey:
@@ -439,11 +451,11 @@ function AdminPortal() {
         });
 
         if (!token) {
-          console.log("FCM token was not generated.");
+          console.log("7. FCM TOKEN IS EMPTY");
           return;
         }
 
-        console.log("FCM token generated.");
+        console.log("7. FCM TOKEN GENERATED:", token.substring(0, 30) + "...");
 
         const formData = new URLSearchParams();
 
@@ -466,7 +478,7 @@ function AdminPortal() {
           },
         );
 
-        console.log("FCM token registered successfully.");
+        console.log("8. TOKEN SENT TO GOOGLE SHEETS");
       } catch (error) {
         console.error("Notification setup failed:", error);
       }
