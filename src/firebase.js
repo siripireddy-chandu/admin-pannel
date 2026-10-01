@@ -2,14 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getMessaging, isSupported } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDDFD9h_H_u0vMtI52xZpCkmPfaCx4uues",
-  authDomain: "flawskin.firebaseapp.com",
-  projectId: "flawskin",
-  storageBucket: "flawskin.firebasestorage.app",
-  messagingSenderId: "285799857089",
-  appId: "1:285799857089:web:12a55b32a4a1328ff30d40",
+   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
-
 const app = initializeApp(firebaseConfig);
 
 export const getFirebaseMessaging = async () => {
