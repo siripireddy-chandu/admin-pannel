@@ -16,15 +16,3 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  console.log("Background notification:", payload);
-
-  const notificationTitle = payload.notification?.title || "New Order Received";
-
-  const notificationOptions = {
-    body: payload.notification?.body || "You have received a new order.",
-    icon: "/logo192.png",
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
