@@ -409,40 +409,43 @@ function AdminPortal() {
   useEffect(() => {
     const setupNotifications = async () => {
       try {
-        console.log("1. Notification setup started");
+        alert("1. START");
 
         if (!("Notification" in window)) {
-          console.log("2. Notifications NOT supported");
+          alert("2. Notification API NOT supported");
           return;
         }
 
         const permission = await Notification.requestPermission();
-        console.log("3. Permission:", permission);
+
+        alert("3. Permission = " + permission);
 
         if (permission !== "granted") {
-          console.log("STOP: Permission not granted");
           return;
         }
+
+        alert("4. Getting Firebase Messaging...");
 
         const messaging = await getFirebaseMessaging();
 
         if (!messaging) {
-          console.log("STOP: Firebase Messaging not supported");
+          alert("5. Messaging is NULL");
           return;
         }
 
-        console.log("4. Firebase Messaging OK");
+        alert("5. Firebase Messaging OK");
 
         const registration = await navigator.serviceWorker.register(
           "/firebase-messaging-sw.js",
         );
 
-        console.log("5. Service Worker OK:", registration.scope);
+        alert("6. Service Worker registered\n\n" + registration.scope);
 
-        // Wait until the service worker is ready
         await navigator.serviceWorker.ready;
 
-        console.log("6. Generating FCM token...");
+        alert("7. Service Worker READY");
+
+        alert("8. Calling getToken...");
 
         const token = await getToken(messaging, {
           vapidKey:
@@ -450,23 +453,26 @@ function AdminPortal() {
           serviceWorkerRegistration: registration,
         });
 
+        alert(
+          "9. getToken completed\n\n" +
+            (token ? "TOKEN GENERATED" : "TOKEN EMPTY"),
+        );
+
         if (!token) {
-          console.log("7. FCM TOKEN IS EMPTY");
           return;
         }
 
-        console.log("7. FCM TOKEN GENERATED:", token.substring(0, 30) + "...");
+        console.log("FCM TOKEN:", token);
 
         const formData = new URLSearchParams();
 
         formData.append("action", "registerToken");
         formData.append("token", token);
-        formData.append(
-          "device",
-          `${navigator.platform} - ${navigator.userAgent}`,
-        );
+        formData.append("device", "MOBILE - " + navigator.userAgent);
 
-        await fetch(
+        alert("10. Sending token to Google Sheets...");
+
+        const response = await fetch(
           "https://script.google.com/macros/s/AKfycbwuiSSV27FQPWSlRpwJyudjwnXR3QoCcMys83nV4qj9LTUvG_K4myXR7Ce_laoxfgiE/exec",
           {
             method: "POST",
@@ -478,9 +484,13 @@ function AdminPortal() {
           },
         );
 
-        console.log("8. TOKEN SENT TO GOOGLE SHEETS");
+        console.log("Google response:", response);
+
+        alert("11. TOKEN SENT\n\nCheck Google Sheet now.");
       } catch (error) {
-        console.error("Notification setup failed:", error);
+        alert("ERROR\n\n" + error.name + "\n\n" + error.message);
+
+        console.error(error);
       }
     };
 
