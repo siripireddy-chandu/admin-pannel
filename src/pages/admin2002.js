@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import SignaturePad from "signature_pad";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import { getToken } from "firebase/messaging";
+import { getToken, onMessage } from "firebase/messaging";
 import { getFirebaseMessaging } from "../firebase";
 function AdminPortal() {
   const [activeTab, setActiveTab] = useState("Tab1");
   const [iframeLoading, setIframeLoading] = useState(true);
+  const [iframeKey, setIframeKey] = useState(0);
 
   // Modal state & Loader control indicators
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -391,12 +392,6 @@ function AdminPortal() {
 
   useEffect(() => {
     setActiveTab("Tab1");
-
-    const interval = setInterval(() => {
-      setIframeLoading(true);
-    }, 300000);
-
-    return () => clearInterval(interval);
   }, []);
 
   // Sync sheet collection changes on window launch
@@ -406,99 +401,93 @@ function AdminPortal() {
     }
   }, [showBlockModal]);
 
- useEffect(() => {
-  const setupNotifications = async () => {
-    try {
-      console.log("Notification setup started");
+  useEffect(() => {
+    const setupNotifications = async () => {
+      try {
+        console.log("Notification setup started");
 
-      if (!("Notification" in window)) {
-        console.log("Notifications are not supported.");
-        return;
-      }
+        if (!("Notification" in window)) {
+          console.log("Notifications are not supported.");
+          return;
+        }
 
-      const permission = await Notification.requestPermission();
+        const permission = await Notification.requestPermission();
 
-      console.log("Notification permission:", permission);
+        console.log("Notification permission:", permission);
 
-      if (permission !== "granted") {
-        console.log("Notification permission denied.");
-        return;
-      }
+        if (permission !== "granted") {
+          console.log("Notification permission denied.");
+          return;
+        }
 
-      const messaging = await getFirebaseMessaging();
+        const messaging = await getFirebaseMessaging();
 
-      if (!messaging) {
-        console.log("Firebase Messaging is not supported.");
-        return;
-      }
+        if (!messaging) {
+          console.log("Firebase Messaging is not supported.");
+          return;
+        }
 
-      console.log("Firebase Messaging initialized.");
+        console.log("Firebase Messaging initialized.");
 
-      const registration =
-        await navigator.serviceWorker.register(
-          "/firebase-messaging-sw.js"
+        const registration = await navigator.serviceWorker.register(
+          "/firebase-messaging-sw.js",
         );
 
-      console.log(
-        "Service Worker registered:",
-        registration.scope
-      );
+        console.log("Service Worker registered:", registration.scope);
 
-      // Wait until the service worker is ready
-      await navigator.serviceWorker.ready;
+        // Wait until the service worker is ready
+        await navigator.serviceWorker.ready;
 
-      console.log("Service Worker ready.");
+        console.log("Service Worker ready.");
 
-      const token = await getToken(messaging, {
-        vapidKey:
-          "BFZvjzngbQ8QUtGDtMSNLTj-jExq-DJqGzFv9dV-JnuUddrE56J0KhpuPmov9mYpaTwqSxAFv7BkoUnCI3Z4cWw",
-        serviceWorkerRegistration: registration,
-      });
+        const token = await getToken(messaging, {
+          vapidKey:
+            "BFZvjzngbQ8QUtGDtMSNLTj-jExq-DJqGzFv9dV-JnuUddrE56J0KhpuPmov9mYpaTwqSxAFv7BkoUnCI3Z4cWw",
+          serviceWorkerRegistration: registration,
+        });
 
-      if (!token) {
-        console.log("FCM token was not generated.");
-        return;
-      }
-
-      console.log(
-        "FCM token generated:",
-        token.substring(0, 30) + "..."
-      );
-
-      const formData = new URLSearchParams();
-
-      formData.append("action", "registerToken");
-      formData.append("token", token);
-      formData.append(
-        "device",
-        `${navigator.platform} - ${navigator.userAgent}`
-      );
-
-      await fetch(
-        "https://script.google.com/macros/s/AKfycbwuiSSV27FQPWSlRpwJyudjwnXR3QoCcMys83nV4qj9LTUvG_K4myXR7Ce_laoxfgiE/exec",
-        {
-          method: "POST",
-          mode: "no-cors",
-          headers: {
-            "Content-Type":
-              "application/x-www-form-urlencoded",
-          },
-          body: formData.toString(),
+        if (!token) {
+          console.log("FCM token was not generated.");
+          return;
         }
-      );
 
-      console.log("FCM token registered successfully.");
+        console.log("FCM token generated:", token.substring(0, 30) + "...");
 
-    } catch (error) {
-      console.error(
-        "Notification setup failed:",
-        error
-      );
-    }
-  };
+        const formData = new URLSearchParams();
 
-  setupNotifications();
-}, []);
+        formData.append("action", "registerToken");
+        formData.append("token", token);
+        formData.append(
+          "device",
+          `${navigator.platform} - ${navigator.userAgent}`,
+        );
+
+        await fetch(
+          "https://script.google.com/macros/s/AKfycbwuiSSV27FQPWSlRpwJyudjwnXR3QoCcMys83nV4qj9LTUvG_K4myXR7Ce_laoxfgiE/exec",
+          {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: formData.toString(),
+          },
+        );
+
+        console.log("FCM token registered successfully.");
+        onMessage(messaging, (payload) => {
+          console.log("New order notification received:", payload);
+
+          // Refresh COD order history iframe only when a new notification arrives
+          setIframeKey((prev) => prev + 1);
+        });
+      } catch (error) {
+        console.error("Notification setup failed:", error);
+      }
+    };
+
+    setupNotifications();
+  }, []);
 
   const handleTabClick = (tabName) => {
     if (tabName === "BlockModalOpen") {
@@ -708,6 +697,7 @@ function AdminPortal() {
                 </div>
               )}
               <iframe
+                key={iframeKey}
                 src="https://script.google.com/macros/s/AKfycbyxhOTrUIJKxe-4Q9wz0URt4xKNssCfbfqajPraST5aR0CuPuxfpjNF1hpbJvbgzRCx/exec"
                 width="100%"
                 height="800px"
@@ -735,11 +725,12 @@ function AdminPortal() {
                 </div>
               )}
               <iframe
-                src="https://script.google.com/macros/s/AKfycbyvsMcypP9XB-5uZlFA6CjtMy6KsdR4FwexMKcdmwl0meRun7XTYtjSal43Jxan1V07/exec"
+                key={iframeKey}
+                src="https://script.google.com/macros/s/AKfycbyxhOTrUIJKxe-4Q9wz0URt4xKNssCfbfqajPraST5aR0CuPuxfpjNF1hpbJvbgzRCx/exec"
                 width="100%"
                 height="800px"
                 style={{ border: "none" }}
-                title="Request Call Data"
+                title="Cash on Delivery Data"
                 onLoad={handleIframeLoad}
               />
             </div>

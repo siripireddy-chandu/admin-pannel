@@ -1,8 +1,9 @@
 importScripts(
-  "https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js",
+  "https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"
 );
+
 importScripts(
-  "https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js",
+  "https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js"
 );
 
 firebase.initializeApp({
@@ -16,3 +17,36 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+
+// ======================================================
+// NOTIFICATION CLICK
+// ======================================================
+
+self.addEventListener("notificationclick", function (event) {
+
+  event.notification.close();
+
+  const url = "https://admin-pannel-8yoq-orcin.vercel.app/";
+
+  event.waitUntil(
+    clients.matchAll({
+      type: "window",
+      includeUncontrolled: true,
+    }).then(function (clientList) {
+
+      // If admin page is already open, focus it
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+
+      // Otherwise open admin page
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
+
+});
