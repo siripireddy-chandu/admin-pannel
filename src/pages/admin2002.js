@@ -449,7 +449,7 @@ function AdminPortal() {
 
         const token = await getToken(messaging, {
           vapidKey:
-            "BFZvjzngbQ8QUtGDtMSNLTj-jExq-DJqGzFv9dV-JnuUddrE56J0KhpuPmov9mYpaTwqSxAFv7BUnCI3Z4cWw",
+            "BFZvjzngbQ8QUtGDtMSNLTj-jExq-DJqGzFv9dV-JnuUddrE56J0KhpuPmov9mYpaTwqSxAFv7BkoUnCI3Z4cWw",
           serviceWorkerRegistration: registration,
         });
 
