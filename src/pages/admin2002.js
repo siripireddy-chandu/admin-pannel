@@ -406,103 +406,74 @@ function AdminPortal() {
     }
   }, [showBlockModal]);
 
- useEffect(() => {
-  const setupNotifications = async () => {
-    try {
-      alert("1. Notification setup started");
+  useEffect(() => {
+    const setupNotifications = async () => {
+      try {
+        if (!("Notification" in window)) {
+          console.log("Notifications are not supported.");
+          return;
+        }
 
-      if (!("Notification" in window)) {
-        alert("2. Notifications NOT supported");
-        return;
-      }
+        const permission = await Notification.requestPermission();
 
-      const permission = await Notification.requestPermission();
-      alert("3. Permission: " + permission);
+        if (permission !== "granted") {
+          console.log("Notification permission denied.");
+          return;
+        }
 
-      if (permission !== "granted") {
-        alert("STOP: Permission not granted");
-        return;
-      }
+        const messaging = await getFirebaseMessaging();
 
-      const messaging = await getFirebaseMessaging();
+        if (!messaging) {
+          console.log("Firebase Messaging is not supported.");
+          return;
+        }
 
-      if (!messaging) {
-        alert("STOP: Firebase Messaging not supported");
-        return;
-      }
-
-      alert("4. Firebase Messaging OK");
-
-      const registration =
-        await navigator.serviceWorker.register(
-          "/firebase-messaging-sw.js"
+        const registration = await navigator.serviceWorker.register(
+          "/firebase-messaging-sw.js",
         );
 
-      alert(
-        "5. Service Worker OK\n" +
-        registration.scope
-      );
+        const token = await getToken(messaging, {
+          vapidKey:
+            "BFZvjzngbQ8QUtGDtMSNLTj-jExq-DJqGzFv9dV-JnuUddrE56J0KhpuPmov9mYpaTwqSxAFv7BUnCI3Z4cWw",
+          serviceWorkerRegistration: registration,
+        });
 
-      alert("6. Generating FCM token...");
-
-      const token = await getToken(messaging, {
-        vapidKey:
-          "BFZvjzngbQ8QUtGDtMSNLTj-jExq-DJqGzFv9dV-JnuUddrE56J0KhpuPmov9mYpaTwqSxAFv7BkoUnCI3Z4cWw",
-        serviceWorkerRegistration: registration,
-      });
-
-      if (!token) {
-        alert("7. FCM TOKEN IS EMPTY");
-        return;
-      }
-
-      alert(
-        "7. FCM TOKEN GENERATED!\n\n" +
-        token.substring(0, 30) +
-        "..."
-      );
-
-      const formData = new URLSearchParams();
-
-      formData.append("action", "registerToken");
-      formData.append("token", token);
-      formData.append(
-        "device",
-        `${navigator.platform} - ${navigator.userAgent}`
-      );
-
-      await fetch(
-        "https://script.google.com/macros/s/AKfycbwuiSSV27FQPWSlRpwJyudjwnXR3QoCcMys83nV4qj9LTUvG_K4myXR7Ce_laoxfgiE/exec",
-        {
-          method: "POST",
-          mode: "no-cors",
-          headers: {
-            "Content-Type":
-              "application/x-www-form-urlencoded",
-          },
-          body: formData.toString(),
+        if (!token) {
+          console.log("FCM token was not generated.");
+          return;
         }
-      );
 
-      alert("8. TOKEN SENT TO GOOGLE SHEETS");
+        console.log("FCM token generated.");
 
-    } catch (error) {
-      alert(
-        "ERROR:\n\n" +
-        error.name +
-        "\n\n" +
-        error.message
-      );
+        const formData = new URLSearchParams();
 
-      console.error(
-        "Notification setup failed:",
-        error
-      );
-    }
-  };
+        formData.append("action", "registerToken");
+        formData.append("token", token);
+        formData.append(
+          "device",
+          `${navigator.platform} - ${navigator.userAgent}`,
+        );
 
-  setupNotifications();
-}, []);
+        await fetch(
+          "https://script.google.com/macros/s/AKfycbwuiSSV27FQPWSlRpwJyudjwnXR3QoCcMys83nV4qj9LTUvG_K4myXR7Ce_laoxfgiE/exec",
+          {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: formData.toString(),
+          },
+        );
+
+        console.log("FCM token registered successfully.");
+      } catch (error) {
+        console.error("Notification setup failed:", error);
+      }
+    };
+
+    setupNotifications();
+  }, []);
 
   const handleTabClick = (tabName) => {
     if (tabName === "BlockModalOpen") {
