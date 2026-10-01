@@ -406,112 +406,98 @@ function AdminPortal() {
     }
   }, [showBlockModal]);
 
- useEffect(() => {
-  const setupNotifications = async () => {
-    try {
-      console.log("Starting notification setup...");
+  useEffect(() => {
+    const setupNotifications = async () => {
+      try {
+        console.log("Starting notification setup...");
 
-      if (!("Notification" in window)) {
-        console.log("This browser does not support notifications.");
-        return;
-      }
-
-      const permission = await Notification.requestPermission();
-
-      console.log("Notification permission:", permission);
-
-      if (permission !== "granted") {
-        console.log("Notification permission denied.");
-        return;
-      }
-
-      const messaging = await getFirebaseMessaging();
-
-      if (!messaging) {
-        console.log("Firebase Messaging is not supported.");
-        return;
-      }
-
-      console.log("Firebase Messaging initialized.");
-
-      const registration =
-        await navigator.serviceWorker.register(
-          "/firebase-messaging-sw.js"
-        );
-
-      console.log(
-        "Service worker registered:",
-        registration.scope
-      );
-
-      const token = await getToken(messaging, {
-        vapidKey:
-          "BFZvjzngbQ8QUtGDtMSNLTj-jExq-DJqGzFv9dV-JnuUddrE56J0KhpuPmov9mYpaTwqSxAFv7BkoUnCI3Z4cWw",
-        serviceWorkerRegistration: registration,
-      });
-
-      if (!token) {
-        console.log("FCM token was not generated.");
-        return;
-      }
-
-      console.log("FCM TOKEN:", token);
-
-      const formData = new URLSearchParams();
-
-      formData.append("action", "registerToken");
-      formData.append("token", token);
-      formData.append(
-        "device",
-        `${navigator.platform} - ${navigator.userAgent}`
-      );
-
-      const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbwuiSSV27FQPWSlRpwJyudjwnXR3QoCcMys83nV4qj9LTUvG_K4myXR7Ce_laoxfgiE/exec",
-        {
-          method: "POST",
-          mode: "no-cors",
-          headers: {
-            "Content-Type":
-              "application/x-www-form-urlencoded",
-          },
-          body: formData.toString(),
+        if (!("Notification" in window)) {
+          console.log("This browser does not support notifications.");
+          return;
         }
-      );
 
-      console.log("FCM token registration request sent.");
+        const permission = await Notification.requestPermission();
 
-      onMessage(messaging, (payload) => {
-        console.log(
-          "Foreground notification:",
-          payload
+        console.log("Notification permission:", permission);
+
+        if (permission !== "granted") {
+          console.log("Notification permission denied.");
+          return;
+        }
+
+        const messaging = await getFirebaseMessaging();
+
+        if (!messaging) {
+          console.log("Firebase Messaging is not supported.");
+          return;
+        }
+
+        console.log("Firebase Messaging initialized.");
+
+        const registration = await navigator.serviceWorker.register(
+          "/firebase-messaging-sw.js",
         );
 
-        const title =
-          payload.notification?.title ||
-          "New Order Received";
+        console.log("Service worker registered:", registration.scope);
 
-        const body =
-          payload.notification?.body ||
-          "You have received a new order.";
-
-        new Notification(title, {
-          body: body,
-          icon: "/logo192.png",
+        const token = await getToken(messaging, {
+          vapidKey:
+            "BFZvjzngbQ8QUtGDtMSNLTj-jExq-DJqGzFv9dV-JnuUddrE56J0KhpuPmov9mYpaTwqSxAFv7BkoUnCI3Z4cWw",
+          serviceWorkerRegistration: registration,
         });
-      });
 
-      console.log("Notification setup completed.");
-    } catch (error) {
-      console.error(
-        "Notification setup failed:",
-        error
-      );
-    }
-  };
+        if (!token) {
+          console.log("FCM token was not generated.");
+          return;
+        }
 
-  setupNotifications();
-}, []);
+        console.log("FCM TOKEN:", token);
+
+        const formData = new URLSearchParams();
+
+        formData.append("action", "registerToken");
+        formData.append("token", token);
+        formData.append(
+          "device",
+          `${navigator.platform} - ${navigator.userAgent}`,
+        );
+
+        await fetch(
+          "https://script.google.com/macros/s/AKfycbwuiSSV27FQPWSlRpwJyudjwnXR3QoCcMys83nV4qj9LTUvG_K4myXR7Ce_laoxfgiE/exec",
+          {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: formData.toString(),
+          },
+        );
+
+        console.log("FCM token registration request sent.");
+
+        onMessage(messaging, (payload) => {
+          console.log("Foreground notification:", payload);
+
+          const title = payload.notification?.title || "New Order Received";
+
+          const body =
+            payload.notification?.body || "You have received a new order.";
+
+          new Notification(title, {
+            body: body,
+            icon: "/logo192.png",
+          });
+        });
+
+        console.log("Notification setup completed.");
+      } catch (error) {
+        console.error("Notification setup failed:", error);
+      }
+    };
+
+    setupNotifications();
+  }, []);
 
   const handleTabClick = (tabName) => {
     if (tabName === "BlockModalOpen") {
