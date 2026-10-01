@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import SignaturePad from "signature_pad";
 import { PDFDocument, StandardFonts } from "pdf-lib";
+import { getToken, onMessage } from "firebase/messaging";
+import { getFirebaseMessaging } from "../firebase";
 function AdminPortal() {
   const [activeTab, setActiveTab] = useState("Tab1");
   const [iframeLoading, setIframeLoading] = useState(true);
@@ -403,6 +405,81 @@ function AdminPortal() {
       fetchBlockedSlots();
     }
   }, [showBlockModal]);
+
+  useEffect(() => {
+    const setupNotifications = async () => {
+      try {
+        if (!("Notification" in window)) {
+          console.log("This browser does not support notifications.");
+          return;
+        }
+
+        const permission = await Notification.requestPermission();
+
+        if (permission !== "granted") {
+          console.log("Notification permission denied.");
+          return;
+        }
+
+        const messaging = await getFirebaseMessaging();
+
+        if (!messaging) {
+          return;
+        }
+
+        const registration = await navigator.serviceWorker.register(
+          "/firebase-messaging-sw.js",
+        );
+
+        const token = await getToken(messaging, {
+          vapidKey:
+            "BFZvjzngbQ8QUtGDtMSNLTj-jExq-DJqGzFv9dV-JnuUddrE56J0KhpuPmov9mYpaTwqSxAFv7BkoUnCI3Z4cWw",
+          serviceWorkerRegistration: registration,
+        });
+
+        console.log("FCM TOKEN:", token);
+
+        const formData = new URLSearchParams();
+
+        formData.append("action", "registerToken");
+        formData.append("token", token);
+        formData.append(
+          "device",
+          `${navigator.platform} - ${navigator.userAgent}`,
+        );
+
+        await fetch("https://script.google.com/macros/s/AKfycbwuiSSV27FQPWSlRpwJyudjwnXR3QoCcMys83nV4qj9LTUvG_K4myXR7Ce_laoxfgiE/exec", {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: formData.toString(),
+        });
+
+        console.log("FCM token registered");
+
+        onMessage(messaging, (payload) => {
+          console.log("Foreground notification:", payload);
+
+          const title = payload.notification?.title || "New Order Received";
+
+          const body =
+            payload.notification?.body || "You have received a new order.";
+
+          // Show notification while dashboard is open
+          new Notification(title, {
+            body: body,
+            icon: "/logo192.png",
+          });
+        });
+      } catch (error) {
+        console.error("Notification setup failed:", error);
+      }
+    };
+
+    setupNotifications();
+  }, []);
 
   const handleTabClick = (tabName) => {
     if (tabName === "BlockModalOpen") {
