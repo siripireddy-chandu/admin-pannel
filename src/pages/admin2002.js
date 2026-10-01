@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import SignaturePad from "signature_pad";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import { getToken, onMessage } from "firebase/messaging";
+import { getToken } from "firebase/messaging";
 import { getFirebaseMessaging } from "../firebase";
 function AdminPortal() {
   const [activeTab, setActiveTab] = useState("Tab1");
